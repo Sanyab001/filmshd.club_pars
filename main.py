@@ -56,7 +56,7 @@ def pars(base_url, headers):
 
 
 def file_writer(films):
-    with open('parsed_2018_films.csv', 'w') as file:
+    with open('parsed_films.csv', 'w') as file:
         pen = csv.writer(file)
         pen.writerow(('Название фильма и краткое описание', 'URL'))
         for film in films:
