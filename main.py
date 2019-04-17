@@ -1,18 +1,21 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import csv
+import re
 
 # создадим заголовки для эмуляции работы из браузера
 headers = {'accept': '*/*',
            'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'}
 # базовый адрес
-base_url = 'https://filmshd.club/xfsearch/year/2018/page/1/'
+base_url = 'https://filmshd.club/page/1/'
 
 
 def pars(base_url, headers):
     films = []
     urls = []
     urls.append(base_url)
+    text_search = r"\S+\/page\/\d+"
+    find_count = r"\d+"
     # создадим сессию
     session = requests.Session()
     # эмуляция открытия страницы в браузере
@@ -21,10 +24,12 @@ def pars(base_url, headers):
         # получим весь контент
         soup = bs(request.content, 'lxml')
         try:
-            # найти способ взять номер ласт страницы
-            # pages = soup.find('div', attrs = {'class':'navigation'})
-            for i in range(1, 6 + 1):
-                url = f'https://filmshd.club/xfsearch/year/2018/page/{i}/'
+            # найти способ взять номер ласт страницы (не самый красивый способ, но рабочий)
+            pages = str(soup.find('div', attrs = {'class':'navigation'}))
+            last_page = re.findall(text_search, pages)[-1]
+            count = int(re.findall(find_count, last_page)[0])
+            for i in range(1, count + 1):
+                url = f'https://filmshd.club/page/{i}/'
                 if url not in urls:
                     urls.append(url)
         except:
@@ -55,7 +60,10 @@ def file_writer(films):
         pen = csv.writer(file)
         pen.writerow(('Название фильма и краткое описание', 'URL'))
         for film in films:
-            pen.writerow((film['info'], film['href']))
+            try:
+                pen.writerow((film['info'], film['href']))
+            except:
+                pass
 
 
 films = pars(base_url, headers)
